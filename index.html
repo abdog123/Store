@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boda Tech | مستقبل الإلكترونيات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --neon: #00d2ff; 
+            --dark: #0f172a; 
+            --bg: #f1f5f9; 
+            --white: #ffffff; 
+            --discount-red: #ff4757;
+            --success-green: #2ecc71;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        body { background-color: var(--bg); margin: 0; padding: 0; color: var(--dark); overflow-x: hidden; }
+
+        header { 
+            background: var(--dark); padding: 15px 5%; 
+            display: flex; justify-content: space-between; align-items: center; 
+            color: white; position: sticky; top: 0; z-index: 1000; 
+            border-bottom: 2px solid var(--neon);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .logo { font-size: 1.6rem; font-weight: 800; } .logo span { color: var(--neon); }
+        .cart-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; position: relative; }
+        .cart-badge { position: absolute; top: -8px; right: -8px; background: var(--discount-red); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border: 2px solid var(--dark); }
+
+        .hero {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.5)), 
+                        url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070');
+            background-size: cover; background-position: center;
+            height: 300px; display: flex; align-items: center; justify-content: center;
+            color: white; text-align: center; padding: 20px;
+        }
+        .hero-content h1 { font-size: 2.5rem; margin: 0; }
+        .hero-content p { font-size: 1.1rem; margin: 15px 0; background: var(--discount-red); display: inline-block; padding: 5px 20px; border-radius: 50px; font-weight: 800; }
+
+        #loading-area { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; width: 100%; gap: 20px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0, 210, 255, 0.1); border-top-color: var(--neon); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .container { padding: 30px 5%; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        @media (min-width: 768px) { .grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
+
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid #eef2f6; }
+        .card img { width: 100%; height: 160px; object-fit: contain; padding: 15px; }
+        .card-info { padding: 12px; text-align: center; }
+        .old-price { text-decoration: line-through; color: #94a3b8; font-size: 0.85rem; margin-left: 5px; }
+        .price { color: var(--neon); font-weight: 800; font-size: 1.1rem; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; position: relative; max-height: 90vh; overflow-y: auto; }
+
+        /* شاشة تأكيد الأوردر مع شريط التحميل */
+        #confirm-overlay { 
+            display: none; position: fixed; inset: 0; background: white; z-index: 3000; 
+            flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; 
+        }
+        .progress-box { width: 100%; max-width: 300px; background: #eee; height: 8px; border-radius: 10px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: var(--success-green); transition: width 0.3s; }
+
+        .qty-input { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 15px 0; background: #f8fafc; padding: 8px; border-radius: 12px; }
+        .qty-btn { width: 35px; height: 35px; border-radius: 10px; border: none; background: var(--dark); color: white; cursor: pointer; }
+        
+        .action-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; flex: 1; }
+        .btn-buy { background: var(--discount-red); color: white; }
+        .btn-cart { background: var(--dark); color: white; }
+        .btn-confirm { background: var(--neon); color: var(--dark); width: 100%; margin-top: 15px; font-weight: 800; }
+
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 10px 25px; border-radius: 50px; display: none; z-index: 4000; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">Boda <span>Tech</span></div>
+    <div class="cart-btn" onclick="openCart()">🛒 السلة <span class="cart-badge" id="cartCount">0</span></div>
+</header>
+
+<section class="hero">
+    <div class="hero-content">
+        <h1>عروض <span>التقنية</span> الكبرى</h1>
+        <p>خصم 30% لفترة محدودة جداً!</p>
+    </div>
+</section>
+
+<div class="container">
+    <div id="loading-area"><div class="spinner"></div><p>جاري جلب أفضل العروض...</p></div>
+    <div id="products-grid" class="grid"></div>
+</div>
+
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <span onclick="closeModals()" style="cursor:pointer; float:left; font-size:20px;">✕</span>
+        <img id="dImg" src="" style="width:100%; height:180px; object-fit:contain;">
+        <h2 id="dTitle" style="margin:10px 0; text-align:center;"></h2>
+        <div style="text-align:center; margin-bottom:10px;">
+            <span id="dOldPrice" class="old-price" style="font-size:1.1rem;"></span>
+            <span id="dPrice" class="price" style="font-size:1.5rem;"></span>
+        </div>
+        
+        <div class="qty-input">
+            <button class="qty-btn" onclick="changeQty(-1)">-</button>
+            <span id="qtyVal" style="font-weight:800; width:30px; text-align:center;">1</span>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+        </div>
+
+        <div class="action-btns">
+            <button class="btn btn-buy" onclick="goDirectOrder()">شراء الآن ⚡</button>
+            <button class="btn btn-cart" onclick="addToCart()">للسلة 🛒</button>
+        </div>
+    </div>
+</div>
+
+<div id="checkoutModal" class="modal">
+    <div class="modal-content">
+        <span onclick="closeModals()" style="cursor:pointer; float:left;">✕</span>
+        <h3 style="text-align:center;">بيانات الشحن 🚚</h3>
+        <div id="orderSummary" style="background:#f1f5f9; padding:10px; border-radius:10px; font-size:0.85rem; margin-bottom:10px;"></div>
+        
+        <select id="shipCity" onchange="calcFinal()"><option value="0">اختر المدينة</option><option value="50">القاهرة (50 ج.م)</option><option value="100">باقي المحافظات (100 ج.م)</option></select>
+        <input type="text" id="uName" placeholder="الاسم بالكامل">
+        <input type="tel" id="uPhone" placeholder="رقم الهاتف">
+        <textarea id="uAddr" placeholder="العنوان بالتفصيل"></textarea>
+        
+        <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+            <span>الإجمالي:</span><span><span id="finalTotal">0</span> ج.م</span>
+        </div>
+        <button class="btn btn-confirm" onclick="startOrderProcess()">تأكيد الطلب نهائياً</button>
+    </div>
+</div>
+
+<div id="confirm-overlay">
+    <div class="spinner" style="width:60px; height:60px;"></div>
+    <h2 id="processText">جاري تأكيد الأوردر...</h2>
+    <p>رجاءً لا تغلق الصفحة، نحن نقوم بحجز منتجاتك</p>
+    <div class="progress-box"><div class="progress-bar" id="pBar"></div></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbydua9NwK-WNohpBHACN6YusqHis3Kdox5HUzA6nzVDjw0YjZQe0szst2FmrPIVlPw/exec";
+    let products = [], cart = [], currentP = null, qty = 1, isDirect = false;
+
+    async function loadData() {
+        try {
+            const res = await fetch(scriptURL);
+            products = await res.json();
+            document.getElementById('loading-area').style.display = 'none';
+            renderProducts();
+        } catch(e) { document.getElementById('loading-area').innerHTML = "فشل التحميل ⚠️"; }
+    }
+
+    function renderProducts() {
+        document.getElementById('products-grid').innerHTML = products.map((p, i) => {
+            const originalPrice = parseFloat(p.price || p.Price);
+            const fakePrice = Math.round(originalPrice * 1.3); // سعر وهمي أعلى بـ 30%
+            return `
+            <div class="card" onclick="openDetails(${i})">
+                <img src="${p.image || p.Image}">
+                <div class="card-info">
+                    <div style="font-weight:600; font-size:0.9rem; height:40px; overflow:hidden;">${p.name || p.Name}</div>
+                    <span class="old-price">${fakePrice} ج.م</span>
+                    <span class="price">${originalPrice} ج.م</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function openDetails(i) {
+        currentP = products[i]; qty = 1;
+        const originalPrice = parseFloat(currentP.price || currentP.Price);
+        document.getElementById('qtyVal').innerText = qty;
+        document.getElementById('dImg').src = currentP.image || currentP.Image;
+        document.getElementById('dTitle').innerText = currentP.name || currentP.Name;
+        document.getElementById('dOldPrice').innerText = Math.round(originalPrice * 1.3) + " ج.م";
+        document.getElementById('dPrice').innerText = originalPrice + " ج.م";
+        document.getElementById('detailsModal').style.display = 'flex';
+    }
+
+    function changeQty(v) { qty = Math.max(1, qty + v); document.getElementById('qtyVal').innerText = qty; }
+
+    function addToCart() {
+        cart.push({...currentP, selectedQty: qty});
+        document.getElementById('cartCount').innerText = cart.length;
+        closeModals();
+        showToast("أضيف للسلة ✅");
+    }
+
+    function goDirectOrder() { isDirect = true; closeModals(); showCheckout(); }
+    function openCart() { if(cart.length === 0) return showToast("السلة فارغة 🛒"); isDirect = false; showCheckout(); }
+
+    function showCheckout() {
+        const summary = document.getElementById('orderSummary');
+        let subtotal = 0;
+        if(isDirect) {
+            subtotal = parseFloat(currentP.price || currentP.Price) * qty;
+            summary.innerHTML = `${currentP.name} (عدد: ${qty})`;
+        } else {
+            subtotal = cart.reduce((a, b) => a + (parseFloat(b.price || b.Price) * b.selectedQty), 0);
+            summary.innerHTML = cart.map(i => `${i.name} (x${i.selectedQty})`).join("<br>");
+        }
+        document.getElementById('checkoutModal').style.display = 'flex';
+        calcFinal();
+    }
+
+    function calcFinal() {
+        let sub = isDirect ? (parseFloat(currentP.price || currentP.Price) * qty) : cart.reduce((a, b) => a + (parseFloat(b.price || b.Price) * b.selectedQty), 0);
+        let ship = parseFloat(document.getElementById('shipCity').value) || 0;
+        document.getElementById('finalTotal').innerText = sub + ship;
+    }
+
+    // وظيفة معالجة الطلب (الرسالة المنبثقة)
+    function startOrderProcess() {
+        if(!document.getElementById('uName').value || !document.getElementById('uPhone').value || document.getElementById('shipCity').value == "0") {
+            return showToast("يرجى إكمال البيانات ⚠️");
+        }
+
+        document.getElementById('checkoutModal').style.display = 'none';
+        const overlay = document.getElementById('confirm-overlay');
+        const bar = document.getElementById('pBar');
+        const text = document.getElementById('processText');
+        overlay.style.display = 'flex';
+
+        let width = 0;
+        const interval = setInterval(() => {
+            if (width >= 100) {
+                clearInterval(interval);
+                submitFinalOrder(); // إرسال الطلب فعلياً بعد انتهاء الشريط
+            } else {
+                width += 2;
+                bar.style.width = width + '%';
+                if(width == 40) text.innerText = "جاري مراجعة المخزن...";
+                if(width == 70) text.innerText = "جاري تسجيل بيانات الشحن...";
+            }
+        }, 50)
+    }
+
+    async function submitFinalOrder() {
+        const orderData = {
+            customerName: document.getElementById('uName').value,
+            phone: document.getElementById('uPhone').value,
+            address: document.getElementById('uAddr').value,
+            productName: isDirect ? `${currentP.name} (x${qty})` : cart.map(i => `${i.name} (x${i.selectedQty})`).join(" , ")
+        };
+
+        try {
+            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(orderData) });
+            
+            document.getElementById('confirm-overlay').innerHTML = `
+                <div style="font-size:60px;">✅</div>
+                <h2>تم الطلب بنجاح!</h2>
+                <p>تم استلام طلبك، سيقوم فريقنا بالاتصال بك قريباً.</p>
+                <button class="btn btn-confirm" onclick="location.reload()" style="max-width:200px">العودة للمتجر</button>
+            `;
+            if(!isDirect) cart = [];
+        } catch(e) {
+            document.getElementById('confirm-overlay').innerHTML = `<h2>⚠️ خطأ في الإرسال</h2><button onclick="location.reload()">حاول مرة أخرى</button>`;
+        }
+    }
+
+    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+
+    loadData();
+</script>
+</body>
+</html>
